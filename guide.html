@@ -1,0 +1,547 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#0a0707" />
+<title>EGOIST TP - 使い方ガイド</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Anton&family=Cinzel:wght@500;700;900&family=Noto+Sans+JP:wght@300;400;500;700;900&family=Noto+Serif+JP:wght@600;900&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { background: #0a0707; color: #f5f5f4; font-family: 'Noto Sans JP', sans-serif; line-height: 1.7; }
+  body { padding-bottom: 60px; }
+  .display { font-family: 'Anton', sans-serif; letter-spacing: 0.03em; font-weight: 400; }
+  .wordmark { font-family: 'Cinzel', serif; font-weight: 700; }
+  .kanji { font-family: 'Noto Serif JP', serif; font-weight: 900; }
+
+  .stripe-bg {
+    background-image: repeating-linear-gradient(135deg,
+      rgba(220, 38, 38, 0.04) 0,
+      rgba(220, 38, 38, 0.04) 1px,
+      transparent 1px,
+      transparent 14px);
+  }
+  .vignette { background: radial-gradient(ellipse at top, rgba(127, 29, 29, 0.25) 0%, transparent 60%); }
+  .crown::before, .crown::after {
+    content: ''; display: inline-block; width: 18px; height: 1px;
+    background: linear-gradient(to right, transparent, #dc2626);
+    vertical-align: middle; margin: 0 12px;
+  }
+  .crown::after { background: linear-gradient(to left, transparent, #dc2626); }
+
+  /* HEADER */
+  header {
+    position: relative;
+    padding: 28px 20px 32px;
+    border-bottom: 1px solid rgba(127, 29, 29, 0.4);
+    overflow: hidden;
+    text-align: center;
+  }
+  header .stripe-bg, header .vignette { position: absolute; inset: 0; pointer-events: none; }
+  header .kanji-bg {
+    position: absolute; right: -10px; top: -30px;
+    color: rgba(127, 29, 29, 0.18);
+    font-size: 200px; line-height: 1;
+    pointer-events: none; user-select: none;
+  }
+  header .inner { position: relative; }
+  header h1 {
+    font-size: 28px;
+    letter-spacing: 0.5em;
+    margin-bottom: 4px;
+    padding-left: 0.5em;
+  }
+  header .sub {
+    font-size: 9px;
+    letter-spacing: 0.5em;
+    color: #991b1b;
+    margin-bottom: 20px;
+  }
+  header h2 {
+    font-family: 'Anton', sans-serif;
+    font-size: 22px;
+    color: #fca5a5;
+    letter-spacing: 0.15em;
+    text-shadow: 0 0 30px rgba(220, 38, 38, 0.4);
+  }
+
+  /* SECTIONS */
+  section {
+    padding: 24px 20px;
+    border-bottom: 1px solid #1c1917;
+  }
+  .section-tag {
+    font-size: 10px;
+    letter-spacing: 0.35em;
+    color: #78716c;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-tag::before {
+    content: '';
+    width: 16px; height: 1px;
+    background: #7f1d1d;
+  }
+  h3 {
+    font-family: 'Anton', sans-serif;
+    font-size: 22px;
+    color: #f5f5f4;
+    letter-spacing: 0.05em;
+    margin-bottom: 16px;
+  }
+  h3 .num {
+    color: #ef4444;
+    margin-right: 12px;
+  }
+  p { color: #d6d3d1; font-size: 14px; margin-bottom: 12px; }
+
+  /* URL BLOCK */
+  .url-block {
+    background: rgba(127, 29, 29, 0.15);
+    border: 1px solid rgba(127, 29, 29, 0.5);
+    border-radius: 4px;
+    padding: 14px 16px;
+    margin: 16px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .url-block a {
+    color: #fca5a5;
+    text-decoration: none;
+    word-break: break-all;
+    font-size: 13px;
+    flex: 1;
+  }
+  .copy-btn {
+    background: #dc2626;
+    color: #fafaf9;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .copy-btn:active { transform: scale(0.95); }
+
+  /* STEPS */
+  ol.steps {
+    list-style: none;
+    counter-reset: step;
+  }
+  ol.steps li {
+    counter-increment: step;
+    padding: 12px 0 12px 38px;
+    position: relative;
+    color: #d6d3d1;
+    font-size: 14px;
+    border-bottom: 1px dashed #292524;
+  }
+  ol.steps li:last-child { border-bottom: none; }
+  ol.steps li::before {
+    content: counter(step);
+    position: absolute; left: 0; top: 12px;
+    width: 26px; height: 26px;
+    background: #dc2626;
+    color: #fafaf9;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Anton', sans-serif;
+    font-size: 14px;
+  }
+  ol.steps li b { color: #f5f5f4; }
+
+  ul.bullets {
+    list-style: none;
+    margin-top: 8px;
+  }
+  ul.bullets li {
+    padding: 6px 0 6px 18px;
+    position: relative;
+    color: #a8a29e;
+    font-size: 13px;
+  }
+  ul.bullets li::before {
+    content: '▸';
+    position: absolute; left: 0; top: 6px;
+    color: #dc2626;
+  }
+
+  /* CARDS for rules */
+  .card {
+    background: rgba(28, 25, 23, 0.8);
+    border: 1px solid #292524;
+    border-left: 3px solid #dc2626;
+    padding: 14px 16px;
+    margin: 12px 0;
+    border-radius: 2px;
+  }
+  .card-title {
+    font-weight: 700;
+    color: #fafaf9;
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+  .card p { font-size: 13px; color: #a8a29e; margin: 0; }
+
+  /* WARNING */
+  .warning {
+    background: rgba(120, 53, 15, 0.2);
+    border: 1px solid rgba(180, 83, 9, 0.4);
+    color: #fcd34d;
+    padding: 14px 16px;
+    margin: 12px 0;
+    border-radius: 4px;
+    font-size: 13px;
+  }
+  .warning b { color: #fde68a; }
+
+  /* EXAMPLE */
+  .example {
+    background: #0c0a09;
+    border: 1px solid #292524;
+    padding: 14px 16px;
+    margin: 12px 0;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #a8a29e;
+  }
+  .example .label {
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    color: #57534e;
+    margin-bottom: 8px;
+  }
+  .example b { color: #fca5a5; }
+  .example .calc {
+    font-family: 'Anton', sans-serif;
+    color: #ef4444;
+    font-size: 18px;
+    margin-top: 8px;
+    text-align: right;
+  }
+
+  /* MEMBER LIST */
+  .member-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px 14px;
+    margin-top: 10px;
+  }
+  .member-grid div {
+    color: #d6d3d1;
+    font-size: 13px;
+    padding: 4px 0;
+  }
+  .member-grid div::before {
+    content: '・';
+    color: #7f1d1d;
+    margin-right: 4px;
+  }
+
+  /* TABLE */
+  .roles-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    font-size: 13px;
+  }
+  .roles-table th {
+    text-align: left;
+    color: #78716c;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    font-weight: 400;
+    padding: 8px 6px;
+    border-bottom: 1px solid #292524;
+  }
+  .roles-table td {
+    padding: 10px 6px;
+    border-bottom: 1px solid #1c1917;
+    color: #d6d3d1;
+    vertical-align: top;
+  }
+  .roles-table td:first-child {
+    font-family: 'Anton', sans-serif;
+    color: #ef4444;
+    width: 90px;
+  }
+  .roles-table .pct {
+    color: #fca5a5;
+    font-family: 'Anton', sans-serif;
+  }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 30px 20px 0;
+    color: #57534e;
+  }
+  .foot-mark {
+    font-size: 9px;
+    letter-spacing: 0.5em;
+  }
+  .foot-mark + p { font-size: 11px; margin-top: 8px; }
+
+  /* CTA */
+  .cta {
+    display: block;
+    width: 100%;
+    background: #dc2626;
+    color: #fafaf9;
+    text-align: center;
+    padding: 18px;
+    border-radius: 3px;
+    text-decoration: none;
+    font-family: 'Anton', sans-serif;
+    font-size: 22px;
+    letter-spacing: 0.2em;
+    margin: 16px 0;
+    box-shadow: 0 0 35px -8px rgba(220, 38, 38, 0.7);
+  }
+  .cta:active { transform: scale(0.98); }
+
+  /* TOC */
+  .toc { list-style: none; }
+  .toc li { padding: 8px 0; border-bottom: 1px solid #1c1917; }
+  .toc a {
+    color: #d6d3d1;
+    text-decoration: none;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .toc a .n {
+    font-family: 'Anton', sans-serif;
+    color: #dc2626;
+    font-size: 16px;
+    width: 24px;
+  }
+  .toc a:active { color: #fca5a5; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="stripe-bg"></div>
+  <div class="vignette"></div>
+  <div class="kanji-bg kanji" aria-hidden="true">我</div>
+  <div class="inner">
+    <h1 class="wordmark crown">EGOIST</h1>
+    <div class="sub">JUNE ・ 2026 ・ TEAM BATTLE</div>
+    <h2>USER ・ GUIDE</h2>
+  </div>
+</header>
+
+<!-- TOC -->
+<section>
+  <div class="section-tag">CONTENTS</div>
+  <ul class="toc">
+    <li><a href="#intro"><span class="n">01</span><span>このツールでできること</span></a></li>
+    <li><a href="#setup"><span class="n">02</span><span>初回セットアップ</span></a></li>
+    <li><a href="#flow"><span class="n">03</span><span>成約が出たときの流れ</span></a></li>
+    <li><a href="#rules"><span class="n">04</span><span>運用ルール</span></a></li>
+    <li><a href="#calc"><span class="n">05</span><span>計算ルール</span></a></li>
+    <li><a href="#faq"><span class="n">06</span><span>よくある質問</span></a></li>
+  </ul>
+</section>
+
+<!-- 01 INTRO -->
+<section id="intro">
+  <div class="section-tag">01 ・ INTRO</div>
+  <h3><span class="num">01</span>このツールでできること</h3>
+  <p>EGOISTの6月チーム戦のTPをリアルタイムで全員で共有するツールです。誰かが成約を記録した瞬間、全員のスマホに反映されます。</p>
+  <ul class="bullets">
+    <li>商材・体制・役割を選んでワンタップでTP記録</li>
+    <li>チーム合計TP・売上換算金額が即時更新</li>
+    <li>個人別ランキング (LEADERBOARD) で順位が見える</li>
+    <li>履歴 (CONQUEST LOG) で全成約を共有</li>
+  </ul>
+
+  <a class="cta" href="https://egoist-tp.vercel.app/">アプリを開く →</a>
+
+  <div class="url-block">
+    <a href="https://egoist-tp.vercel.app/">https://egoist-tp.vercel.app/</a>
+    <button class="copy-btn" onclick="copyURL(this)">COPY</button>
+  </div>
+</section>
+
+<!-- 02 SETUP -->
+<section id="setup">
+  <div class="section-tag">02 ・ SETUP</div>
+  <h3><span class="num">02</span>初回セットアップ</h3>
+  <p>各自スマホで一度だけやればOK。30秒で終わります。</p>
+
+  <ol class="steps">
+    <li>上のリンクをタップしてアプリを開く</li>
+    <li>画面トップの <b>RECORDER</b> をタップ → 自分の名前を選択<br><span style="color:#78716c; font-size:12px;">※選んだ名前は端末に記憶されるので、次回以降は自動で表示されます</span></li>
+    <li><b>ホーム画面に追加</b>するとアプリのように使えて便利<br>
+    <span style="color:#78716c; font-size:12px;">iPhone (Safari): 共有ボタン → 「ホーム画面に追加」<br>Android (Chrome): メニュー (︙) → 「ホーム画面に追加」</span></li>
+  </ol>
+
+  <div class="warning">
+    <b>⚠ 名前は必ず選んでください</b><br>
+    未設定だと履歴が「匿名」記録になり、個人ランキングに反映されません。
+  </div>
+</section>
+
+<!-- 03 FLOW -->
+<section id="flow">
+  <div class="section-tag">03 ・ FLOW</div>
+  <h3><span class="num">03</span>成約が出たときの流れ</h3>
+
+  <ol class="steps">
+    <li><b>商材</b>を選択<br><span style="color:#78716c; font-size:12px;">11商材から該当のものを選ぶ。金額とTPが自動で入る</span></li>
+    <li><b>体制</b>を選択<br>通常 / A2一般 (チーム完結) / A2幹部 (振分済み) の3パターン</li>
+    <li><b>役割割当</b>でA1・A2・Bにメンバーを割り当てる<br><span style="color:#78716c; font-size:12px;">EGOISTのメンバーを選ぶと赤くハイライト=自チーム集計対象。他チームの人が関わる場合は「チーム外」を選ぶ</span></li>
+    <li><b>THIS DEAL</b>欄で今回のTPを確認</li>
+    <li><b>STRIKE</b>ボタンをタップで記録完了!<br><span style="color:#78716c; font-size:12px;">+XXX TP の演出と共にチーム合計に加算される</span></li>
+  </ol>
+
+  <div class="example">
+    <div class="label">EXAMPLE</div>
+    <p>AIエンジニア (1540TP) を <b>A2一般</b> 体制で成約。<br>
+    A1=<b>前田愛梨</b>、A2=チーム外、B=<b>中川明久</b> の場合:</p>
+    <div style="margin-top:8px; font-size:12px; color:#a8a29e;">
+      ・前田愛梨 (A1 40%) = 616 TP<br>
+      ・A2 = チーム外なのでカウントなし<br>
+      ・中川明久 (B 30%) = 462 TP
+    </div>
+    <div class="calc">CHALLENGE +1,078 TP</div>
+  </div>
+</section>
+
+<!-- 04 RULES -->
+<section id="rules">
+  <div class="section-tag">04 ・ RULES</div>
+  <h3><span class="num">04</span>運用ルール</h3>
+
+  <div class="card">
+    <div class="card-title">記録は1成約につき1人だけ</div>
+    <p>重複登録防止のため、基本は<b>Bが記録</b>する。複数人で「自分が記録する!」と被らないよう注意。</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">他チームのA1/Bが関わる成約も記録する</div>
+    <p>EGOISTのメンバーが1人でも関わっていれば、その人の分のTPは記録対象。役割割当で他チームの人は「チーム外」を選択すれば自動で除外されます。</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">CLEAR ALL は触らない</div>
+    <p>履歴一覧の右上にある「CLEAR ALL」は<b>全員の履歴を消す</b>機能。月初リセット時以外は絶対に押さない。</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">間違えて記録した場合</div>
+    <p>履歴(CONQUEST LOG)の各成約の右にある「×」ボタンで個別削除可能。気づいたらすぐ消して、正しく登録し直す。</p>
+  </div>
+</section>
+
+<!-- 05 CALC -->
+<section id="calc">
+  <div class="section-tag">05 ・ CALC</div>
+  <h3><span class="num">05</span>計算ルール</h3>
+
+  <p>1TP = ¥500 (税込) で換算。各体制のTP分配率は以下の通り:</p>
+
+  <table class="roles-table">
+    <thead>
+      <tr><th>体制</th><th>分配率</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>通常</td>
+        <td>A1: <span class="pct">60%</span> / B: <span class="pct">40%</span></td>
+      </tr>
+      <tr>
+        <td>A2一般<br><span style="font-family:sans-serif; font-size:10px; color:#78716c;">チーム完結</span></td>
+        <td>A1: <span class="pct">40%</span> / A2: <span class="pct">30%</span> / B: <span class="pct">30%</span></td>
+      </tr>
+      <tr>
+        <td>A2幹部<br><span style="font-family:sans-serif; font-size:10px; color:#78716c;">振分済み</span></td>
+        <td>A1: <span class="pct">55%</span> / B: <span class="pct">45%</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p style="margin-top:16px; color:#78716c; font-size:12px;">
+    ※ A2幹部の場合、本来A2が持つ30%を55÷45でA1とBに振り分け済み<br>
+    ※ チーム外の役割は集計から自動除外
+  </p>
+
+  <h4 style="font-family:'Anton',sans-serif; font-size:16px; color:#fca5a5; margin-top:24px; margin-bottom:10px; letter-spacing:0.1em;">EGOIST メンバー</h4>
+  <div class="member-grid">
+    <div>前田愛梨</div>
+    <div>藤吉凌佑</div>
+    <div>真弓智也</div>
+    <div>岩川実央</div>
+    <div>太田佳央理</div>
+    <div>佐藤匡</div>
+    <div>杉山一誠</div>
+    <div>松下勇輝</div>
+    <div>檜室秋蓮</div>
+    <div>井上怜生</div>
+    <div>中川明久</div>
+  </div>
+</section>
+
+<!-- 06 FAQ -->
+<section id="faq">
+  <div class="section-tag">06 ・ FAQ</div>
+  <h3><span class="num">06</span>よくある質問</h3>
+
+  <div class="card">
+    <div class="card-title">Q. 数字が他のメンバーと違って見える</div>
+    <p>下に引っ張ってリロードしてください。または一度アプリを閉じて開き直すと最新データに同期されます。基本は記録から数秒で全員に反映されます。</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Q. STRIKEボタンが押せない</div>
+    <p>THIS DEALの値が0TPだと押せません。役割割当で「自チームのメンバー」が1人も選ばれていない可能性があります。チームメンバーを少なくとも1人選択してください。</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Q. 自分の名前が変わってしまった</div>
+    <p>RECORDER欄から再度自分の名前を選び直してください。同じ端末なら次回以降は記憶されます。</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Q. 過去に記録した成約を編集したい</div>
+    <p>編集機能はありません。一度×ボタンで削除してから、正しい内容で記録し直してください。</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Q. 不具合・要望があったら</div>
+    <p>藤吉までDM/口頭で連絡してください。</p>
+  </div>
+</section>
+
+<footer>
+  <a class="cta" href="https://egoist-tp.vercel.app/" style="margin-top: 24px;">アプリを開く →</a>
+  <div class="foot-mark wordmark" style="color: #57534e;">EGOIST ・ 唯我独尊</div>
+  <p>USER GUIDE ・ JUNE 2026</p>
+</footer>
+
+<script>
+function copyURL(btn) {
+  navigator.clipboard.writeText('https://egoist-tp.vercel.app/').then(() => {
+    const orig = btn.textContent;
+    btn.textContent = 'COPIED';
+    btn.style.background = '#7f1d1d';
+    setTimeout(() => {
+      btn.textContent = orig;
+      btn.style.background = '#dc2626';
+    }, 1500);
+  });
+}
+</script>
+
+</body>
+</html>
