@@ -13,12 +13,14 @@ const PRODUCTS = [
   { name: 'BR ハイブリッドエキスパート', price: 615000, tp: 1230 },
   { name: 'BR ハイブリッドクリエイター', price: 945000, tp: 1890 },
   { name: 'SNS大学', price: 660000, tp: 1320 },
+  { name: 'WiTH HIIT', price: 38500, tp: 77 },
 ];
 
 const SCENARIOS = {
   standard:  { label: '通常',   sub: 'A・Bのみ',     splits: { a1: 0.6,  b: 0.4 } },
   a2_normal: { label: 'A2一般', sub: 'チーム完結',    splits: { a1: 0.4,  a2: 0.3, b: 0.3 } },
   a2_exec:   { label: 'A2幹部', sub: '振分済み',      splits: { a1: 0.55, b: 0.45 } },
+  a1_exec:   { label: 'A1幹部', sub: 'A1反映外',      splits: { a2: 0.3,  b: 0.3 } },
 };
 
 const ROLE_LABELS = { a1: 'A1', a2: 'A2', b: 'B' };
@@ -38,7 +40,10 @@ const SELECT_ARROW = {
   backgroundSize: '1.3em',
 };
 
-// Map DB row -> app deal object
+// Format TP keeping decimals (no rounding up)
+const fmtTP = (n) => Number(n || 0).toLocaleString('ja-JP', { maximumFractionDigits: 2 });
+const fmtYen = (tp) => Math.round((tp || 0) * 500).toLocaleString('ja-JP');
+
 const fromRow = (r) => ({
   id: r.id,
   product: r.product,
@@ -50,7 +55,7 @@ const fromRow = (r) => ({
 });
 
 export default function App() {
-  const [productIdx, setProductIdx] = useState(0);
+  const [productIdxs, setProductIdxs] = useState([0]);
   const [scenario, setScenario] = useState('standard');
   const [assignees, setAssignees] = useState({ a1: MEMBERS[0], a2: EXTERNAL, b: MEMBERS[1] });
   const [history, setHistory] = useState([]);
@@ -74,7 +79,6 @@ export default function App() {
     fetchDeals();
   }, [fetchDeals]);
 
-  // Realtime subscription - immediately react to teammates' actions
   useEffect(() => {
     const channel = supabase
       .channel('deals-changes')
@@ -85,7 +89,6 @@ export default function App() {
     return () => { supabase.removeChannel(channel); };
   }, [fetchDeals]);
 
-  // Backup polling every 30s in case realtime drops
   useEffect(() => {
     const interval = setInterval(fetchDeals, 30000);
     return () => clearInterval(interval);
@@ -97,7 +100,10 @@ export default function App() {
     return () => document.removeEventListener('visibilitychange', handler);
   }, [fetchDeals]);
 
-  const product = PRODUCTS[productIdx];
+  const selectedProducts = productIdxs.map(i => PRODUCTS[i]);
+  const totalBaseTP = selectedProducts.reduce((s, p) => s + p.tp, 0);
+  const totalPrice = selectedProducts.reduce((s, p) => s + p.price, 0);
+
   const { splits } = SCENARIOS[scenario];
 
   const isTeamMember = (name) => MEMBERS.includes(name);
@@ -105,14 +111,14 @@ export default function App() {
   const contributions = useMemo(() => {
     return Object.entries(splits).map(([role, pct]) => {
       const assignee = assignees[role];
-      const tp = Math.round(product.tp * pct);
+      const tp = totalBaseTP * pct;  // no rounding - keep decimals
       const isTeam = isTeamMember(assignee);
       return { role, pct, tp, assignee, isTeam };
     });
-  }, [splits, assignees, product.tp]);
+  }, [splits, assignees, totalBaseTP]);
 
   const teamTP = contributions.reduce((s, c) => s + (c.isTeam ? c.tp : 0), 0);
-  const recordedTP = history.reduce((s, h) => s + (h.teamTP || 0), 0);
+  const recordedTP = history.reduce((s, h) => s + (Number(h.teamTP) || 0), 0);
 
   const memberTPs = useMemo(() => {
     const tally = Object.fromEntries(MEMBERS.map(m => [m, 0]));
@@ -120,7 +126,7 @@ export default function App() {
       const contribs = deal.contributions || [];
       for (const c of contribs) {
         if (c.isTeam && tally[c.assignee] !== undefined) {
-          tally[c.assignee] += c.tp || 0;
+          tally[c.assignee] += Number(c.tp) || 0;
         }
       }
     }
@@ -143,6 +149,14 @@ export default function App() {
     setAssignees({ ...assignees, [role]: name });
   };
 
+  const addProduct = () => setProductIdxs([...productIdxs, 0]);
+  const removeProduct = (i) => setProductIdxs(productIdxs.filter((_, idx) => idx !== i));
+  const setProductAt = (i, val) => {
+    const next = [...productIdxs];
+    next[i] = val;
+    setProductIdxs(next);
+  };
+
   const record = async () => {
     if (teamTP === 0) return;
     setSyncing(true);
@@ -150,9 +164,10 @@ export default function App() {
     const time = new Date().toLocaleString('ja-JP', {
       month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit',
     });
+    const productName = selectedProducts.map(p => p.name).join(' + ');
     const row = {
       id,
-      product: product.name,
+      product: productName,
       scenario,
       contributions: contributions.map(c => ({
         role: c.role, assignee: c.assignee, pct: c.pct, tp: c.tp, isTeam: c.isTeam,
@@ -161,7 +176,6 @@ export default function App() {
       recorder: recorder || '匿名',
       time,
     };
-    // Optimistic update
     setHistory([fromRow(row), ...history]);
     setFlash(teamTP);
     setTimeout(() => setFlash(0), 1400);
@@ -292,12 +306,12 @@ export default function App() {
           <div className="flex items-baseline gap-2">
             <span className={`display text-6xl text-red-500 inline-block ${flash ? 'pulse-ring rounded-sm' : ''}`}
               style={{ textShadow: '0 0 30px rgba(220, 38, 38, 0.4)' }}>
-              {recordedTP.toLocaleString()}
+              {fmtTP(recordedTP)}
             </span>
             <span className="display text-3xl text-red-900">TP</span>
           </div>
           <div className="text-xs text-stone-600 mt-0.5 tabular-nums">
-            ¥{(recordedTP * 500).toLocaleString()} 相当
+            ¥{fmtYen(recordedTP)} 相当
           </div>
 
           {flash > 0 && (
@@ -305,29 +319,57 @@ export default function App() {
               className="display text-6xl pop-anim pointer-events-none"
               style={{ color: '#fca5a5', textShadow: '0 0 40px rgba(220, 38, 38, 0.9), 0 0 80px rgba(220, 38, 38, 0.5)' }}
             >
-              +{flash.toLocaleString()}
+              +{fmtTP(flash)}
             </div>
           )}
         </div>
       </div>
 
+      {/* PRODUCTS (multi) */}
       <div className="px-5 py-4 border-b border-stone-900">
-        <div className="text-[10px] tracking-[0.35em] text-stone-500 mb-2">商材</div>
-        <select
-          value={productIdx}
-          onChange={(e) => setProductIdx(parseInt(e.target.value))}
-          className="w-full bg-stone-950 border border-stone-800 rounded-sm px-3 py-3 text-sm appearance-none pr-9"
-          style={SELECT_ARROW}
-        >
-          {PRODUCTS.map((p, i) => (
-            <option key={i} value={i}>{p.name} ¥{p.price.toLocaleString()} / {p.tp}TP</option>
+        <div className="flex items-baseline justify-between mb-2">
+          <div className="text-[10px] tracking-[0.35em] text-stone-500">商材</div>
+          {productIdxs.length > 1 && (
+            <div className="text-[10px] tabular-nums text-stone-600">
+              合計 {totalBaseTP}TP ・ ¥{totalPrice.toLocaleString()}
+            </div>
+          )}
+        </div>
+        <div className="space-y-1.5">
+          {productIdxs.map((idx, i) => (
+            <div key={i} className="flex gap-2">
+              <select
+                value={idx}
+                onChange={(e) => setProductAt(i, parseInt(e.target.value))}
+                className="flex-1 min-w-0 bg-stone-950 border border-stone-800 rounded-sm px-3 py-2.5 text-sm appearance-none pr-8"
+                style={SELECT_ARROW}
+              >
+                {PRODUCTS.map((p, j) => (
+                  <option key={j} value={j}>{p.name} ¥{p.price.toLocaleString()} / {p.tp}TP</option>
+                ))}
+              </select>
+              {productIdxs.length > 1 && (
+                <button
+                  onClick={() => removeProduct(i)}
+                  className="text-stone-500 active:text-red-400 w-8 flex items-center justify-center text-xl shrink-0 border border-stone-800 rounded-sm"
+                  aria-label="商材を削除"
+                >×</button>
+              )}
+            </div>
           ))}
-        </select>
+        </div>
+        <button
+          onClick={addProduct}
+          className="mt-2 w-full py-2 border border-dashed border-stone-800 text-stone-500 text-xs tracking-widest rounded-sm active:border-red-700 active:text-red-400 transition"
+        >
+          + 商材を追加
+        </button>
       </div>
 
+      {/* SCENARIO - now 2x2 grid */}
       <div className="px-5 py-4 border-b border-stone-900">
         <div className="text-[10px] tracking-[0.35em] text-stone-500 mb-2">体制</div>
-        <div className="grid grid-cols-3 gap-1.5">
+        <div className="grid grid-cols-2 gap-1.5">
           {Object.entries(SCENARIOS).map(([key, { label, sub }]) => (
             <button
               key={key}
@@ -344,6 +386,7 @@ export default function App() {
         </div>
       </div>
 
+      {/* ROLES */}
       <div className="px-5 py-4 border-b border-stone-900">
         <div className="text-[10px] tracking-[0.35em] text-stone-500 mb-3">役割割当</div>
         <div className="space-y-2">
@@ -366,8 +409,8 @@ export default function App() {
                 {MEMBERS.map(m => <option key={m} value={m}>{m}</option>)}
                 <option value={EXTERNAL}>{EXTERNAL}</option>
               </select>
-              <div className={`text-xs tabular-nums shrink-0 w-14 text-right ${isTeam ? 'text-red-400' : 'text-stone-700 line-through'}`}>
-                {tp}TP
+              <div className={`text-xs tabular-nums shrink-0 w-16 text-right ${isTeam ? 'text-red-400' : 'text-stone-700 line-through'}`}>
+                {fmtTP(tp)}TP
               </div>
             </div>
           ))}
@@ -377,17 +420,23 @@ export default function App() {
             ※ 幹部A2の30%はA1とBに15%ずつ振り分け済み
           </p>
         )}
+        {scenario === 'a1_exec' && (
+          <p className="mt-3 text-[11px] text-stone-600 leading-relaxed">
+            ※ 幹部A1の40%はチームポイントに反映されません (BとA2それぞれ30%のみ)
+          </p>
+        )}
       </div>
 
+      {/* THIS DEAL + RECORD */}
       <div className="px-5 py-5 border-b border-stone-900 relative overflow-hidden">
         <div className="absolute inset-0 stripe-bg pointer-events-none opacity-50" />
         <div className="relative">
           <div className="text-[10px] tracking-[0.35em] text-stone-500 mb-1">THIS ・ DEAL</div>
           <div className="flex items-baseline gap-2 mb-1">
-            <span className="display text-6xl text-stone-100">{teamTP.toLocaleString()}</span>
+            <span className="display text-6xl text-stone-100">{fmtTP(teamTP)}</span>
             <span className="display text-3xl text-stone-700">TP</span>
           </div>
-          <div className="text-xs text-stone-500 mb-4 tabular-nums">¥{(teamTP * 500).toLocaleString()}</div>
+          <div className="text-xs text-stone-500 mb-4 tabular-nums">¥{fmtYen(teamTP)}</div>
           <button
             onClick={record}
             disabled={teamTP === 0 || syncing}
@@ -399,11 +448,12 @@ export default function App() {
             style={teamTP > 0 && !syncing ? { boxShadow: '0 0 35px -8px rgba(220, 38, 38, 0.7), inset 0 1px 0 rgba(255,255,255,0.08)' } : {}}
           >
             {syncing && <span className="syncing inline-block w-4 h-4 border-2 border-stone-50/40 border-t-stone-50 rounded-full" />}
-            STRIKE +{teamTP.toLocaleString()}TP
+            STRIKE +{fmtTP(teamTP)}TP
           </button>
         </div>
       </div>
 
+      {/* LEADERBOARD */}
       <div className="px-5 mt-5">
         <div className="flex items-center justify-between mb-3">
           <div className="text-[10px] tracking-[0.35em] text-stone-500">LEADERBOARD</div>
@@ -430,7 +480,7 @@ export default function App() {
                     </span>
                     <span className={`display text-xl tabular-nums ${isZero ? 'text-stone-800' : isTop ? 'text-red-300' : 'text-red-400'}`}
                       style={isTop && !isZero ? { textShadow: '0 0 14px rgba(220, 38, 38, 0.6)' } : {}}>
-                      {m.tp.toLocaleString()}
+                      {fmtTP(m.tp)}
                     </span>
                     <span className="display text-xs text-stone-700">TP</span>
                   </div>
@@ -450,7 +500,7 @@ export default function App() {
                       />
                     </div>
                     <span className="text-[10px] text-stone-700 tabular-nums w-20 text-right">
-                      ¥{(m.tp * 500).toLocaleString()}
+                      ¥{fmtYen(m.tp)}
                     </span>
                   </div>
                 </div>
@@ -460,6 +510,7 @@ export default function App() {
         )}
       </div>
 
+      {/* HISTORY */}
       <div className="px-5 mt-6">
         <div className="flex items-center justify-between mb-1">
           <div className="text-[10px] tracking-[0.35em] text-stone-500">CONQUEST ・ LOG</div>
@@ -478,8 +529,8 @@ export default function App() {
               return (
                 <div key={h.id} className="flex justify-between items-start py-2.5 border-b border-stone-900 gap-2">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-sm truncate">{h.product}</span>
+                    <div className="flex items-baseline gap-2 flex-wrap">
+                      <span className="text-sm break-all">{h.product}</span>
                       <span className="text-[10px] text-stone-600 shrink-0">{SCENARIOS[h.scenario]?.label}</span>
                     </div>
                     <div className="text-[10px] text-stone-600 mt-0.5 leading-relaxed">
@@ -495,7 +546,7 @@ export default function App() {
                     </div>
                   </div>
                   <div className="display text-2xl text-red-500 tabular-nums shrink-0">
-                    +{(h.teamTP || 0).toLocaleString()}
+                    +{fmtTP(h.teamTP)}
                   </div>
                   <button
                     onClick={() => remove(h.id)}
